@@ -23,7 +23,7 @@ jobs:
 
     - name: Init Bubblewrap config
       run: |
-        bubblewrap init \
+        echo -e "n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" | bubblewrap init \
           --manifest https://stirring-snickerdoodle-5c5a68.netlify.app/manifest.json \
           --directory twa-app
       env:
@@ -42,7 +42,7 @@ jobs:
     - name: Build APK
       run: |
         cd twa-app
-        bubblewrap build \
+        echo -e "n\n\n\n\n\n\n" | bubblewrap build \
           --keystoreFile android.keystore \
           --keystorePassword tripsplit2024 \
           --keyAlias tripsplit \
