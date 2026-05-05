@@ -1,0 +1,38 @@
+name: Build TWA APK
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+    - name: Install Bubblewrap
+      run: npm install -g @bubblewrap/cli
+    - name: Build TWA
+      run: |
+        mkdir app && cd app
+        bubblewrap init \
+          --manifest https://stirring-snickerdoodle-5c5a68.netlify.app/manifest.json \
+          --packageId com.hostyaya.tripsplit
+        keytool -genkey -v -keystore android.keystore \
+          -alias tripsplit -keyalg RSA -keysize 2048 -validity 10000 \
+          -storepass tripsplit2024 -keypass tripsplit2024 \
+          -dname "CN=HostYaya,O=TripSplit,C=TW"
+        bubblewrap build \
+          --keystoreFile android.keystore \
+          --keystorePassword tripsplit2024 \
+          --keyAlias tripsplit \
+          --keyPassword tripsplit2024
+    - uses: actions/upload-artifact@v3
+      with:
+        name: tripsplit-apk
+        path: app/*.apk
