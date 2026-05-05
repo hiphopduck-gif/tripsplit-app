@@ -1,6 +1,8 @@
 name: Build TWA APK
 on:
   workflow_dispatch:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,39 +18,39 @@ jobs:
       with:
         node-version: '24'
 
-    - name: Setup Android SDK
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget unzip
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        unzip -q commandlinetools-linux-11076708_latest.zip -d $HOME/android-sdk/cmdline-tools
-        mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
-        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
-        yes | sdkmanager --sdk_root=$HOME/android-sdk "platforms;android-34" "build-tools;34.0.0" 2>/dev/null
-
     - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
 
-    - name: Build TWA
+    - name: Init Bubblewrap config
       run: |
-        mkdir app && cd app
         bubblewrap init \
           --manifest https://stirring-snickerdoodle-5c5a68.netlify.app/manifest.json \
-          --packageId com.hostyaya.tripsplit
-        keytool -genkey -v -keystore android.keystore \
-          -alias tripsplit -keyalg RSA -keysize 2048 -validity 10000 \
-          -storepass tripsplit2024 -keypass tripsplit2024 \
+          --directory twa-app
+      env:
+        ANDROID_HOME: /usr/local/lib/android/sdk
+
+    - name: Generate keystore
+      run: |
+        keytool -genkey -v \
+          -keystore twa-app/android.keystore \
+          -alias tripsplit \
+          -keyalg RSA -keysize 2048 -validity 10000 \
+          -storepass tripsplit2024 \
+          -keypass tripsplit2024 \
           -dname "CN=HostYaya,O=TripSplit,C=TW"
+
+    - name: Build APK
+      run: |
+        cd twa-app
         bubblewrap build \
           --keystoreFile android.keystore \
           --keystorePassword tripsplit2024 \
           --keyAlias tripsplit \
           --keyPassword tripsplit2024
+      env:
+        ANDROID_HOME: /usr/local/lib/android/sdk
 
     - uses: actions/upload-artifact@v4
       with:
         name: tripsplit-apk
-        path: app/*.apk
+        path: twa-app/*.apk
