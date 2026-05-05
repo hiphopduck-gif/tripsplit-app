@@ -6,17 +6,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '18'
+
     - uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        unzip -q commandlinetools-linux-11076708_latest.zip -d $HOME/android-sdk/cmdline-tools
+        mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+        yes | sdkmanager --sdk_root=$HOME/android-sdk "platforms;android-34" "build-tools;34.0.0" 2>/dev/null
+
     - name: Install Bubblewrap
       run: npm install -g @bubblewrap/cli
+
     - name: Build TWA
       run: |
         mkdir app && cd app
@@ -32,6 +47,7 @@ jobs:
           --keystorePassword tripsplit2024 \
           --keyAlias tripsplit \
           --keyPassword tripsplit2024
+
     - uses: actions/upload-artifact@v4
       with:
         name: tripsplit-apk
