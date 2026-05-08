@@ -1,0 +1,13 @@
+{
+  "pricing": {
+    "traveler": {
+      "price": 30,
+      "period": "14天"
+    },
+    "globe": {
+      "price": 199,
+      "period": "一年",
+      "original": 299
+    }
+  }
+}
